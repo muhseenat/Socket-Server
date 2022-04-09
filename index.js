@@ -8,12 +8,27 @@ const io = require('socket.io')(8900, {
 
 let users = []
 
-const addUser=(userId,socketId)=>{
-    !users.some((user)=>user.userId===userId )&&
-    users.push({userId,socketId})
+//Function to avoid duplicate users while pushing to arraya
+const addUser = (userId, socketId) => {
+    !users.some((user) => user.userId === userId) &&
+        users.push({ userId, socketId })
 };
+//Function to remove user
+const removeUser = (socketId) => {
+    users = users.filter(user => user.socketId !== socketId)
+}
 
 io.on("connection", (socket) => {
     console.log('a user connected');
     //TAKE USERID AND SOCKETID FROM USER
+    socket.on('addUser', (userId) => {
+        addUser(userId, socket.id)
+        io.emit('getUsers', users)
+    });
+
+    socket.on("disconnect", () => {
+        console.log('user removed');
+        io.emit('getUsers', users)
+        removeUser(socket.id);
+    })
 })
